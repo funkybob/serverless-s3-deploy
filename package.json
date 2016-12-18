@@ -1,5 +1,5 @@
 {
-  "name": "serverless-s3-assets",
+  "name": "serverless-s3-deploy",
   "version": "0.1.0",
   "description": "S3 Asset copy for serverless",
   "main": "index.js",
