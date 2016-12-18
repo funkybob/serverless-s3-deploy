@@ -24,3 +24,9 @@ You can specify `source` relative to the current directory.
 
 Each `source` has its own list of `globs`, which can be either a single glob,
 or a list of globs.
+
+
+Now you can upload all of these assets to your bucket by running:
+
+   $ sls s3delpoy
+
