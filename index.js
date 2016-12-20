@@ -43,14 +43,12 @@ class Assets {
     config.files.forEach((opt) => {
       var cfg = Object.assign({cwd: opt.source}, globOpts);
       glob.sync(opt.globs, cfg).forEach((fn) => {
-        console.log("Filename: ", fn)
-        console.log("Path: ", opt.source + fn)
 
         const body = fs.readFileSync(opt.source + fn)
 
         mime(opt.source + fn, (err, type) => {
           if (err) throw err;
-          console.log("Content-Type:", type)
+          console.log("File: ", fn, type)
 
           this.provider.request('S3', 'putObject', {
             ACL: config.acl || 'public-read',
