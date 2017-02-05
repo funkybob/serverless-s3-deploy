@@ -5,11 +5,13 @@ const validate = require('serverless/lib/plugins/aws/lib/validate');
 
 const glob = require('glob-all');
 const fs = require('fs');
-const mime = require('mime-magic');
+const mime = require('mime-types');
+
 
 const globOpts = {
   nodir: true
 };
+
 
 class Assets {
   constructor (serverless, options) {
@@ -41,27 +43,24 @@ class Assets {
 
     // glob
     config.files.forEach((opt) => {
-      var cfg = Object.assign({cwd: opt.source}, globOpts);
+      let cfg = Object.assign({}, globOpts, {cwd: opt.source});
       glob.sync(opt.globs, cfg).forEach((fn) => {
 
         const body = fs.readFileSync(opt.source + fn)
+        const type = mime.lookup(fn);
 
-        mime(opt.source + fn, (err, type) => {
-          if (err) throw err;
-          console.log("File: ", fn, type)
+        console.log("File: ", fn, type)
 
-          this.provider.request('S3', 'putObject', {
-            ACL: config.acl || 'public-read',
-            Body: body,
-            Bucket: config.bucket,
-            Key: fn,
-            ContentType: type
-          }, this.options.stage, this.options.region)
-
-        });
+        this.provider.request('S3', 'putObject', {
+          ACL: config.acl || 'public-read',
+          Body: body,
+          Bucket: config.bucket,
+          Key: fn,
+          ContentType: type
+        }, this.options.stage, this.options.region);
 
       });
-    })
+    });
 
   }
 }
