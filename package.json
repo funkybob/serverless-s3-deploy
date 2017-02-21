@@ -10,7 +10,6 @@
   "license": "MIT",
   "dependencies": {
     "aws-sdk": "^2.7.10",
-    "bluebird": "^3.4.7",
     "glob-all": "^3.1.0",
     "mime-types": "^2.1.14"
   }

@@ -1,8 +1,5 @@
 'use strict';
 
-const BbPromise = require('bluebird');
-const validate = require('serverless/lib/plugins/aws/lib/validate');
-
 const glob = require('glob-all');
 const fs = require('fs');
 const mime = require('mime-types');
@@ -24,16 +21,14 @@ class Assets {
     this.commands = {
       s3deploy: {
         lifecycleEvents: [
-          'serverless'
+          'deploy'
         ]
       }
     };
 
     this.hooks = {
-      'before:s3deploy:serverless': () => BbPromise.bind(this)
-        .then(this.validate),
-      's3deploy:serverless': () => BbPromise.bind(this)
-        .then(this.deployS3)
+      's3deploy:deploy': () => new Promise.resolve()
+        .then(this.deployS3.bind(this))
     };
   }
 
