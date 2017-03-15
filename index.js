@@ -16,19 +16,22 @@ class Assets {
     this.options = options;
     this.provider = this.serverless.getProvider('aws');
 
-    Object.assign(this, validate)
-
     this.commands = {
       s3deploy: {
         lifecycleEvents: [
           'deploy'
-        ]
+        ],
+        options: {
+            verbose: {
+                usage: "Increase verbosity",
+                shortcut: 'v'
+            }
+        }
       }
     };
 
     this.hooks = {
-      's3deploy:deploy': () => new Promise.resolve()
-        .then(this.deployS3.bind(this))
+      's3deploy:deploy': () => new Promise.resolve().then(this.deployS3.bind(this))
     };
   }
 
@@ -44,7 +47,7 @@ class Assets {
         const body = fs.readFileSync(opt.source + fn)
         const type = mime.lookup(fn);
 
-        console.log("File: ", fn, type)
+        (!!this.options.verbose) && this.serverless.cli.log("File: ", fn, type)
 
         this.provider.request('S3', 'putObject', {
           ACL: config.acl || 'public-read',
