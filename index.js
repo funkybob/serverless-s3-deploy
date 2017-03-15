@@ -59,8 +59,9 @@ class Assets {
           }, this.options.stage, this.options.region);
 
         });
+      });
+      resolve();
     });
-    resolve();
   }
 }
 
