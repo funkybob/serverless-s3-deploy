@@ -31,7 +31,7 @@ class Assets {
     };
 
     this.hooks = {
-      's3deploy:deploy': () => new Promise.resolve().then(this.deployS3.bind(this))
+      's3deploy:deploy': () => Promise.resolve().then(this.deployS3.bind(this))
     };
   }
 
