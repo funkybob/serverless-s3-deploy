@@ -12,5 +12,11 @@
     "aws-sdk": "^2.7.10",
     "glob-all": "^3.1.0",
     "mime-types": "^2.1.14"
+  },
+  "devDependencies": {
+    "eslint": "^3.18.0",
+    "eslint-config-standard": "^7.1.0",
+    "eslint-plugin-promise": "^3.5.0",
+    "eslint-plugin-standard": "^2.1.1"
   }
 }

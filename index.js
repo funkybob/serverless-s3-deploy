@@ -23,7 +23,7 @@ class Assets {
         ],
         options: {
           verbose: {
-            usage: "Increase verbosity",
+            usage: 'Increase verbosity',
             shortcut: 'v'
           }
         }
@@ -45,10 +45,10 @@ class Assets {
         let cfg = Object.assign({}, globOpts, {cwd: opt.source});
         glob.sync(opt.globs, cfg).forEach((fn) => {
 
-          const body = fs.readFileSync(opt.source + fn)
+          const body = fs.readFileSync(opt.source + fn);
           const type = mime.lookup(fn);
 
-          (!!this.options.verbose) && this.serverless.cli.log("File: ", fn, type)
+          (!!this.options.verbose) && this.serverless.cli.log('File: ', fn, type);
 
           this.provider.request('S3', 'putObject', {
             ACL: config.acl || 'public-read',
