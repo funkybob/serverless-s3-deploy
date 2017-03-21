@@ -5,19 +5,22 @@ Plugin for serverless to deploy files to a S3 Bucket
 # Usage
 
 Add to your serverless.yml:
-    plugins:
-      - serverless-s3-deploy
 
-    custom:
-      assets:
-        bucket: my-bucket
-        files:
-          - source: ../assets/
-            globs: **/*.css
-          - source: ../app/
-            globs:
-              - **/*.js
-              - **/*.map
+```
+  plugins:
+    - serverless-s3-deploy
+
+  custom:
+    assets:
+      bucket: my-bucket
+      files:
+        - source: ../assets/
+          globs: **/*.css
+        - source: ../app/
+          globs:
+            - **/*.js
+            - **/*.map
+```
 
 You can specify `source` relative to the current directory.
 
@@ -29,6 +32,20 @@ Now you can upload all of these assets to your bucket by running:
 ```
 $ sls s3delpoy
 ```
+
+## ACL
+
+You can optionally specific an ACL for the files uploaded:
+
+```
+  custom:
+    assets:
+      bucket: my-bucket
+      acl: private
+      files:
+```
+
+The default value is `public-read`.  Options are defined [here](http://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl).
 
 ## IAM Configuration
 
