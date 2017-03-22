@@ -48,7 +48,7 @@ class Assets {
           const body = fs.readFileSync(opt.source + fn);
           const type = mime.lookup(fn);
 
-          (!!this.options.verbose) && this.serverless.cli.log('File: ', fn, type);
+          (!!this.options.verbose) && this.serverless.cli.log(`File:  ${fn} (${type})`);
 
           this.provider.request('S3', 'putObject', {
             ACL: config.acl || 'public-read',
