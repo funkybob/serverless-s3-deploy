@@ -26,6 +26,10 @@ class Assets {
           verbose: {
             usage: 'Increase verbosity',
             shortcut: 'v'
+          },
+          bucket: {
+            usage: 'Limit the deploy to a specific bucket',
+            shortcut: 'b'
           }
         }
       }
@@ -34,6 +38,15 @@ class Assets {
     this.hooks = {
       's3deploy:deploy': () => Promise.resolve().then(this.deployS3.bind(this))
     };
+  }
+
+  /*
+   * Handy method for logging (when `verbose` is set)
+   */
+  log(message) {
+    if(this.options.verbose) {
+      this.serverless.cli.log(message);
+    }
   }
 
   deployS3() {
@@ -49,19 +62,22 @@ class Assets {
       assetSets.forEach((assets) => {
         assets.files.forEach((opt) => {
           const bucket = assets.bucket;
-          if(this.options.verbose) {
-            this.serverless.cli.log(`Bucket: ${bucket}`);
-            this.serverless.cli.log(`Path: ${opt.source}`);
+          this.log(`Bucket: ${bucket}`);
+
+          if(this.options.bucket && this.options.bucket !== bucket) {
+            this.log('Skipping');
+            return;
           }
+
+          this.log(`Path: ${opt.source}`);
+
           const cfg = Object.assign({}, globOpts, {cwd: opt.source});
           glob.sync(opt.globs, cfg).forEach((filename) => {
 
             const body = fs.readFileSync(path.join(opt.source, filename));
             const type = mime.lookup(filename);
 
-            if (this.options.verbose) {
-              this.serverless.cli.log(`\tFile:  ${filename} (${type})`);
-            }
+            this.log(`\tFile:  ${filename} (${type})`);
 
             this.provider.request('S3', 'putObject', {
               ACL: assets.acl || 'public-read',
