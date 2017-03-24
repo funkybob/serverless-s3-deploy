@@ -46,9 +46,9 @@ You can optionally specific an ACL for the files uploaded on a per bucket basis:
 ```
   custom:
     assets:
-      bucket: my-bucket
-      acl: private
-      files:
+      - bucket: my-bucket
+        acl: private
+        files:
 ```
 
 The default value is `public-read`.  Options are defined [here](http://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl).
