@@ -39,6 +39,13 @@ Now you can upload all of these assets to your bucket by running:
 $ sls s3delpoy
 ```
 
+If you have defined multiple buckets, you can limit your deployment to
+a single bucket with the `--bucket` option:
+
+```
+$ sls s3deploy --bucket my-bucket
+```
+
 ## ACL
 
 You can optionally specific an ACL for the files uploaded on a per bucket basis:
