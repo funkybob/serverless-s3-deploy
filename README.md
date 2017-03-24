@@ -1,6 +1,6 @@
 # serverless-s3-deploy
 
-Plugin for serverless to deploy files to a S3 Bucket
+Plugin for serverless to deploy files to a variety of S3 Buckets
 
 # Usage
 
@@ -12,15 +12,21 @@ Add to your serverless.yml:
 
   custom:
     assets:
-      bucket: my-bucket
-      files:
-        - source: ../assets/
-          globs: **/*.css
-        - source: ../app/
-          globs:
-            - **/*.js
-            - **/*.map
+       - bucket: my-bucket
+         files:
+          - source: ../assets/
+            globs: **/*.css
+          - source: ../app/
+            globs:
+              - **/*.js
+              - **/*.map
+       - bucket: my-other-bucket
+         files:
+          - source: ../email-templates/
+            globs: **/*.html
 ```
+
+You can specify any number of `bucket` that you want.
 
 You can specify `source` relative to the current directory.
 
@@ -35,7 +41,7 @@ $ sls s3delpoy
 
 ## ACL
 
-You can optionally specific an ACL for the files uploaded:
+You can optionally specific an ACL for the files uploaded on a per bucket basis:
 
 ```
   custom:

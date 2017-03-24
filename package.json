@@ -4,12 +4,15 @@
   "description": "S3 Asset copy for serverless",
   "main": "index.js",
   "scripts": {
+    "lint": "eslint index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Curtis Maloney",
+  "contributors": [
+    "Dan Rumney <dancrumb@gmail.com>"
+  ],
   "license": "MIT",
   "dependencies": {
-    "aws-sdk": "^2.7.10",
     "glob-all": "^3.1.0",
     "mime-types": "^2.1.14"
   },
