@@ -75,7 +75,7 @@ class Assets {
           glob.sync(opt.globs, cfg).forEach((filename) => {
 
             const body = fs.readFileSync(path.join(opt.source, filename));
-            const type = mime.lookup(filename);
+            const type = mime.lookup(filename) || opt.defaultContentType || 'application/octet-stream';
 
             this.log(`\tFile:  ${filename} (${type})`);
 

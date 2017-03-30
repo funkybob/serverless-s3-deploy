@@ -60,6 +60,22 @@ You can optionally specific an ACL for the files uploaded on a per bucket basis:
 
 The default value is `public-read`.  Options are defined [here](http://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl).
 
+## Content Type
+
+The appropriate Content Type for each file will attempt to be determined using ``mime-types``.  If one can't be determined, a default fallback of 'application/octet-stream' will be used.
+
+You can override this fallback per-source by setting ``defaultContentType``.
+
+```
+  custom:
+    assets:
+      - bucket: my-bucket
+        files:
+          - source: html/
+            defaultContentType: text/html
+            ...
+```
+
 ## IAM Configuration
 
 You're going to need an IAM policy that supports this deployment. This might be
