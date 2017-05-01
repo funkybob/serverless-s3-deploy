@@ -16,6 +16,16 @@ class Assets {
     this.options = options;
     this.provider = this.serverless.getProvider('aws');
 
+    let config = this.serverless.service.custom.assets;
+    if(Array.isArray(config)) {
+        config = {targets: config};
+    }
+
+    this.config = Object.assign({}, {
+        auto: false,
+        targets: [],
+    }, config);
+
     this.commands = {
       s3deploy: {
         usage: 'Deploy assets to S3 bucket',
@@ -36,7 +46,8 @@ class Assets {
     };
 
     this.hooks = {
-      's3deploy:deploy': () => Promise.resolve().then(this.deployS3.bind(this))
+      's3deploy:deploy': () => Promise.resolve().then(this.deployS3.bind(this)),
+      'after:deploy:finalize': () => Promise.resolve().then(this.afterDeploy.bind(this))
     };
   }
 
@@ -49,20 +60,23 @@ class Assets {
     }
   }
 
+  afterDeploy() {
+    if(this.config.auto) {
+        this.deployS3();
+    }
+  }
+
   deployS3() {
     const service = this.serverless.service;
-    let assetSets = service.custom.assets;
-
-    if (!Array.isArray(assetSets)) {
-      assetSets = [assetSets];
-    }
+    let assetSets = this.config.targets;
 
     // glob
     return new Promise((resolve) => {
       assetSets.forEach((assets) => {
         assets.files.forEach((opt) => {
           const bucket = assets.bucket;
-          this.log(`Bucket: ${bucket}`);
+          const prefix = assets.prefix || '';
+          this.log(`Bucket: ${bucket}:${prefix}`);
 
           if(this.options.bucket && this.options.bucket !== bucket) {
             this.log('Skipping');
@@ -83,7 +97,7 @@ class Assets {
               ACL: assets.acl || 'public-read',
               Body: body,
               Bucket: bucket,
-              Key: filename,
+              Key: path.join(prefix, filename),
               ContentType: type
             }, this.options.stage, this.options.region);
           });

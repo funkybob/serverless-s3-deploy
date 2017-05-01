@@ -12,6 +12,7 @@ Add to your serverless.yml:
 
   custom:
     assets:
+      targets:
        - bucket: my-bucket
          files:
           - source: ../assets/
@@ -21,12 +22,14 @@ Add to your serverless.yml:
               - **/*.js
               - **/*.map
        - bucket: my-other-bucket
+         prefix: /subdir
          files:
           - source: ../email-templates/
             globs: **/*.html
 ```
 
-You can specify any number of `bucket` that you want.
+You can specify any number of `target`s that you want. Each `target` has a
+`bucket` and a `prefix`.
 
 You can specify `source` relative to the current directory.
 
@@ -48,14 +51,15 @@ $ sls s3deploy --bucket my-bucket
 
 ## ACL
 
-You can optionally specific an ACL for the files uploaded on a per bucket basis:
+You can optionally specific an ACL for the files uploaded on a per target basis:
 
 ```
   custom:
     assets:
-      - bucket: my-bucket
-        acl: private
-        files:
+      targets:
+        - bucket: my-bucket
+          acl: private
+          files:
 ```
 
 The default value is `public-read`.  Options are defined [here](http://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl).
@@ -69,11 +73,22 @@ You can override this fallback per-source by setting ``defaultContentType``.
 ```
   custom:
     assets:
-      - bucket: my-bucket
-        files:
-          - source: html/
-            defaultContentType: text/html
-            ...
+      targets:
+        - bucket: my-bucket
+          files:
+            - source: html/
+              defaultContentType: text/html
+              ...
+```
+
+## Auto-deploy
+
+If you want s3deploy to run automatically after a deploy, set the `auto` flag:
+
+```
+  custom:
+    assets:
+      auto: true
 ```
 
 ## IAM Configuration
