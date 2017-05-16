@@ -16,16 +16,16 @@ Add to your serverless.yml:
        - bucket: my-bucket
          files:
           - source: ../assets/
-            globs: **/*.css
+            globs: '**/*.css'
           - source: ../app/
             globs:
-              - **/*.js
-              - **/*.map
+              - '**/*.js'
+              - '**/*.map'
        - bucket: my-other-bucket
-         prefix: /subdir
+         prefix: /subdir'
          files:
           - source: ../email-templates/
-            globs: **/*.html
+            globs: '**/*.html'
 ```
 
 You can specify any number of `target`s that you want. Each `target` has a
