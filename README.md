@@ -81,6 +81,12 @@ You can override this fallback per-source by setting ``defaultContentType``.
               ...
 ```
 
+## Other Headers
+
+Additional headers can be included per target by providing a ``headers`` object.
+
+See http://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectPUT.html for more details.
+
 ## Auto-deploy
 
 If you want s3deploy to run automatically after a deploy, set the `auto` flag:
