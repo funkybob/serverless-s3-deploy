@@ -93,7 +93,7 @@ class Assets {
 
             this.log(`\tFile:  ${filename} (${type})`);
 
-            const details = Object.apply({
+            const details = Object.assign({
               ACL: assets.acl || 'public-read',
               Body: body,
               Bucket: bucket,
