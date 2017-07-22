@@ -18,12 +18,12 @@ class Assets {
 
     let config = this.serverless.service.custom.assets;
     if(Array.isArray(config)) {
-        config = {targets: config};
+      config = {targets: config};
     }
 
     this.config = Object.assign({}, {
-        auto: false,
-        targets: [],
+      auto: false,
+      targets: [],
     }, config);
 
     this.commands = {
@@ -62,12 +62,11 @@ class Assets {
 
   afterDeploy() {
     if(this.config.auto) {
-        this.deployS3();
+      this.deployS3();
     }
   }
 
   deployS3() {
-    const service = this.serverless.service;
     let assetSets = this.config.targets;
 
     // glob
