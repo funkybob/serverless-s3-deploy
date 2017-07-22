@@ -18,12 +18,12 @@ class Assets {
 
     let config = this.serverless.service.custom.assets;
     if(Array.isArray(config)) {
-        config = {targets: config};
+      config = {targets: config};
     }
 
     this.config = Object.assign({}, {
-        auto: false,
-        targets: [],
+      auto: false,
+      targets: [],
     }, config);
 
     this.commands = {
@@ -62,20 +62,19 @@ class Assets {
 
   afterDeploy() {
     if(this.config.auto) {
-        this.deployS3();
+      this.deployS3();
     }
   }
 
   deployS3() {
-    const service = this.serverless.service;
     let assetSets = this.config.targets;
 
     // glob
-    return new Promise((resolve) => {
-      assetSets.forEach((assets) => {
-        assets.files.forEach((opt) => {
-          const bucket = assets.bucket;
-          const prefix = assets.prefix || '';
+    return new Promise(resolve => {
+      assetSets.forEach(assets => {
+        const bucket = assets.bucket;
+        const prefix = assets.prefix || '';
+        assets.files.forEach(opt => {
           this.log(`Bucket: ${bucket}:${prefix}`);
 
           if(this.options.bucket && this.options.bucket !== bucket) {
@@ -86,20 +85,22 @@ class Assets {
           this.log(`Path: ${opt.source}`);
 
           const cfg = Object.assign({}, globOpts, {cwd: opt.source});
-          glob.sync(opt.globs, cfg).forEach((filename) => {
+          glob.sync(opt.globs, cfg).forEach(filename => {
 
             const body = fs.readFileSync(path.join(opt.source, filename));
             const type = mime.lookup(filename) || opt.defaultContentType || 'application/octet-stream';
 
             this.log(`\tFile:  ${filename} (${type})`);
 
-            this.provider.request('S3', 'putObject', {
+            const details = Object.assign({
               ACL: assets.acl || 'public-read',
               Body: body,
               Bucket: bucket,
               Key: path.join(prefix, filename),
               ContentType: type
-            }, this.options.stage, this.options.region);
+            }, opt.headers || {});
+
+            this.provider.request('S3', 'putObject', details, this.options.stage, this.options.region);
           });
         });
       });

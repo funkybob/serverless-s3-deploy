@@ -51,7 +51,8 @@ $ sls s3deploy --bucket my-bucket
 
 ## ACL
 
-You can optionally specific an ACL for the files uploaded on a per target basis:
+You can optionally specificy an ACL for the files uploaded on a per target
+basis:
 
 ```
   custom:
@@ -62,11 +63,14 @@ You can optionally specific an ACL for the files uploaded on a per target basis:
           files:
 ```
 
-The default value is `public-read`.  Options are defined [here](http://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl).
+The default value is `public-read`. Options are defined
+[here](http://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl).
 
 ## Content Type
 
-The appropriate Content Type for each file will attempt to be determined using ``mime-types``.  If one can't be determined, a default fallback of 'application/octet-stream' will be used.
+The appropriate Content Type for each file will attempt to be determined using
+``mime-types``. If one can't be determined, a default fallback of
+'application/octet-stream' will be used.
 
 You can override this fallback per-source by setting ``defaultContentType``.
 
@@ -79,6 +83,24 @@ You can override this fallback per-source by setting ``defaultContentType``.
             - source: html/
               defaultContentType: text/html
               ...
+```
+
+## Other Headers
+
+Additional headers can be included per target by providing a ``headers`` object.
+
+See http://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectPUT.html for more
+details.
+
+```
+  custom:
+    assets:
+      targets:
+        - bucket: my-bucket
+          files:
+            - source: html/
+              headers:
+                CacheControl: max-age=31104000 # 1 year
 ```
 
 ## Auto-deploy
