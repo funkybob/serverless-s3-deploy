@@ -92,6 +92,17 @@ Additional headers can be included per target by providing a ``headers`` object.
 See http://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectPUT.html for more
 details.
 
+```
+  custom:
+    assets:
+      targets:
+        - bucket: my-bucket
+          files:
+            - source: html/
+              headers:
+                CacheControl: max-age=31104000 # 1 year
+```
+
 ## Auto-deploy
 
 If you want s3deploy to run automatically after a deploy, set the `auto` flag:
