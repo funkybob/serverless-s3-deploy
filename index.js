@@ -100,7 +100,10 @@ class Assets {
               ContentType: type
             }, opt.headers || {});
 
-            this.provider.request('S3', 'putObject', details, this.options.stage, this.options.region);
+            this.provider.request('S3', 'putObject', details, this.options.stage, this.options.region)
+              .then(() => {
+                this.log(`\tDONE:  ${filename} (${type})`);
+              });
           });
         });
       });
