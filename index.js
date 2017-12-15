@@ -66,17 +66,30 @@ class Assets {
     }
   }
 
+  /**
+   * Creates promise that resolves then all promises returned by
+   * promiseFactories resolve.
+   *
+   * @param {Array.<function(): Promise.<*>>} promiseFactories
+   * @return {Promise<Array.<*>>}
+   */
+  promiseParallel(promiseFactories) {
+    return Promise.all(
+      promiseFactories.map(factory => Promise.resolve(factory()))
+    );
+  }
+
   deployS3() {
     let assetSets = this.config.targets;
 
-    // glob
-    return new Promise(resolve => {
-      assetSets.forEach(assets => {
-        const bucket = assets.bucket;
-        const prefix = assets.prefix || '';
-        assets.files.forEach(opt => {
-          this.log(`Bucket: ${bucket}:${prefix}`);
+    return this.promiseParallel(assetSets.map(assets => {
+      const bucket = assets.bucket;
+      const prefix = assets.prefix || '';
 
+      return () => {
+        this.log(`Bucket: ${bucket}:${prefix}`);
+
+        return this.promiseParallel(assets.files.map(opt => {
           if(this.options.bucket && this.options.bucket !== bucket) {
             this.log('Skipping');
             return;
@@ -85,8 +98,8 @@ class Assets {
           this.log(`Path: ${opt.source}`);
 
           const cfg = Object.assign({}, globOpts, {cwd: opt.source});
-          glob.sync(opt.globs, cfg).forEach(filename => {
 
+          return () => this.promiseParallel(glob.sync(opt.globs, cfg).map(filename => {
             const body = fs.readFileSync(path.join(opt.source, filename));
             const type = mime.lookup(filename) || opt.defaultContentType || 'application/octet-stream';
 
@@ -100,15 +113,16 @@ class Assets {
               ContentType: type
             }, opt.headers || {});
 
-            this.provider.request('S3', 'putObject', details, this.options.stage, this.options.region)
+            return () => this
+              .provider
+              .request('S3', 'putObject', details, this.options.stage, this.options.region)
               .then(() => {
-                this.log(`\tDONE:  ${filename} (${type})`);
+                this.log(`\tDONE: ${ filename } (${type})`);
               });
-          });
-        });
-      });
-      resolve();
-    });
+          }, []));
+        }, []));
+      };
+    }, []));
   }
 }
 
