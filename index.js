@@ -23,6 +23,12 @@ class Assets {
 
     this.config = Object.assign({}, {
       auto: false,
+
+      // TODO: how to configure this level?
+      // Mode of processing targets:
+      // - 'parallel': targets are processed in parallel
+      // - 'sequence': targets are processed one by one
+      mode: 'parallel',
       targets: [],
     }, config);
 
@@ -79,17 +85,55 @@ class Assets {
     );
   }
 
+  /**
+   * Creates promise that resolves when a promise returned by last elelement of
+   * `promiseFactories` gets settled. Each element of promiseFactories is called
+   * only after promise returned by previous settled.
+   *
+   * @param {Array.<function(): Promise.<*>>} promiseFactories
+   * @return {Promise<Array.<*>>}
+   */
+  promiseSequence(promiseFactories) {
+    const sequence = Promise.resolve();
+
+    return promiseFactories.reduce((sequence, promiseFactory) => {
+      const next = () => promiseFactory();
+
+      return sequence
+        .then(next)
+        .catch(error => {
+          this.log(error);
+
+          return next();
+        });
+    }, sequence);
+  }
+
+  /**
+   * @param {string} mode
+   */
+  getModeMethodName(mode) {
+    return mode === 'sequence' ?
+      'promiseSequence' :
+      'promiseParallel';
+  }
+
   deployS3() {
     let assetSets = this.config.targets;
 
-    return this.promiseParallel(assetSets.map(assets => {
+    // Note: this.config.mode can't be expressed in config
+    // It would mean: process targets/assetSets in parallel or sequentially.
+    return this[this.getModeMethodName(this.config.mode)](assetSets.map(assets => {
       const bucket = assets.bucket;
       const prefix = assets.prefix || '';
 
       return () => {
         this.log(`Bucket: ${bucket}:${prefix}`);
 
-        return this.promiseParallel(assets.files.map(opt => {
+        // Note: assets.mode can be expressed in config by passing `mode` key
+        // next to `bucket`.
+        // It will mean: process file groups in parallel or sequentially
+        return this[this.getModeMethodName(assets.mode)](assets.files.map(opt => {
           if(this.options.bucket && this.options.bucket !== bucket) {
             this.log('Skipping');
             return;
@@ -99,7 +143,10 @@ class Assets {
 
           const cfg = Object.assign({}, globOpts, {cwd: opt.source});
 
-          return () => this.promiseParallel(glob.sync(opt.globs, cfg).map(filename => {
+          // Note: opt.mode can be expressed in config by passing `mode` key
+          // next to `source`/`globs`.
+          // It will mean: process files in group in parallel or sequentially
+          return () => this[this.getModeMethodName(opt.mode)](glob.sync(opt.globs, cfg).map(filename => {
             const body = fs.readFileSync(path.join(opt.source, filename));
             const type = mime.lookup(filename) || opt.defaultContentType || 'application/octet-stream';
 
