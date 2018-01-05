@@ -87,13 +87,14 @@ class Assets {
         let logPrefix = `[${bucket}:${prefix}] `;
         this.log(logPrefix + 'Starting');
 
+        let step = Promise.resolved();
+
         if(this.options.bucket && this.options.bucket !== bucket) {
           this.log(logPrefix + 'Skipping');
-          return;
+          return step;
         }
 
         this.log(logPrefix + `Path: ${opt.source}`);
-        let step = Promise.resolved();
 
         if(assets.clear) {
           this.log(logPrefix + 'Clearing...');
@@ -104,21 +105,24 @@ class Assets {
 
         const cfg = Object.assign({}, globOpts, {cwd: opt.source});
         glob.sync(opt.globs, cfg).forEach(filename => {
+          step = step.then(() => {
 
-          const body = fs.readFileSync(path.join(opt.source, filename));
-          const type = mime.lookup(filename) || opt.defaultContentType || 'application/octet-stream';
+            const body = fs.readFileSync(path.join(opt.source, filename));
+            const type = mime.lookup(filename) || opt.defaultContentType || 'application/octet-stream';
 
-          this.log(logPrefix + `${filename} (${type})`);
+            this.log(logPrefix + `${filename} (${type})`);
 
-          const details = Object.assign({
-            ACL: assets.acl || 'public-read',
-            Body: body,
-            Bucket: bucket,
-            Key: path.join(prefix, filename),
-            ContentType: type
-          }, opt.headers || {});
+            const details = Object.assign({
+              ACL: assets.acl || 'public-read',
+              Body: body,
+              Bucket: bucket,
+              Key: path.join(prefix, filename),
+              ContentType: type
+            }, opt.headers || {});
 
-          this.provider.request('S3', 'putObject', details, this.options.stage, this.options.region);
+            this.provider.request('S3', 'putObject', details, this.options.stage, this.options.region);
+          });
+
         });
 
       });
