@@ -24,6 +24,7 @@ class Assets {
     this.config = Object.assign({}, {
       auto: false,
       targets: [],
+      parallel: true,
     }, config);
 
     this.commands = {
@@ -76,7 +77,7 @@ class Assets {
 
   deployS3() {
     let assetSets = this.config.targets;
-    let parallel = this.config.parallel || false;
+    let parallel = this.config.parallel;
 
     // turn each Target into a Promise
     let steps = assetSets.map(assets => {
