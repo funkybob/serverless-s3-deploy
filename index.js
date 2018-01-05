@@ -121,9 +121,12 @@ class Assets {
             }, opt.headers || {});
 
             this.provider.request('S3', 'putObject', details, this.options.stage, this.options.region);
+
           });
 
         });
+
+        return step;
 
       });
 
