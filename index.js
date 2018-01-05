@@ -66,46 +66,66 @@ class Assets {
     }
   }
 
+  processParallel(steps) {
+    return Promise.all(steps);
+  }
+
+  processSequential(steps) {
+    return steps.reduce((a, b) => a.then(b, e => this.log(e)), Promise.resolved())
+  }
+
   deployS3() {
     let assetSets = this.config.targets;
+    let parallel = this.config.parallel || false;
 
-    // glob
-    return new Promise(resolve => {
-      assetSets.forEach(assets => {
-        const bucket = assets.bucket;
-        const prefix = assets.prefix || '';
-        assets.files.forEach(opt => {
-          this.log(`Bucket: ${bucket}:${prefix}`);
+    // turn each Target into a Promise
+    let steps = assetSets.map(assets => {
+      const bucket = assets.bucket;
+      const prefix = assets.prefix || '';
+      assets.files.forEach(opt => {
+        let logPrefix = `[${bucket}:${prefix}] `;
+        this.log(logPrefix + 'Starting');
 
-          if(this.options.bucket && this.options.bucket !== bucket) {
-            this.log('Skipping');
-            return;
-          }
+        if(this.options.bucket && this.options.bucket !== bucket) {
+          this.log(logPrefix + 'Skipping');
+          return;
+        }
 
-          this.log(`Path: ${opt.source}`);
+        this.log(logPrefix + `Path: ${opt.source}`);
+        let step = Promise.resolved();
 
-          const cfg = Object.assign({}, globOpts, {cwd: opt.source});
-          glob.sync(opt.globs, cfg).forEach(filename => {
+        if(assets.clear) {
+          this.log(logPrefix + 'Clearing...');
+          step = step.then(
+            this.provider.request('S3', 'listBucket', {prefix: prefix}, this.options.stage, this.options.region)
+          );
+        }
 
-            const body = fs.readFileSync(path.join(opt.source, filename));
-            const type = mime.lookup(filename) || opt.defaultContentType || 'application/octet-stream';
+        const cfg = Object.assign({}, globOpts, {cwd: opt.source});
+        glob.sync(opt.globs, cfg).forEach(filename => {
 
-            this.log(`\tFile:  ${filename} (${type})`);
+          const body = fs.readFileSync(path.join(opt.source, filename));
+          const type = mime.lookup(filename) || opt.defaultContentType || 'application/octet-stream';
 
-            const details = Object.assign({
-              ACL: assets.acl || 'public-read',
-              Body: body,
-              Bucket: bucket,
-              Key: path.join(prefix, filename),
-              ContentType: type
-            }, opt.headers || {});
+          this.log(logPrefix + `${filename} (${type})`);
 
-            this.provider.request('S3', 'putObject', details, this.options.stage, this.options.region);
-          });
+          const details = Object.assign({
+            ACL: assets.acl || 'public-read',
+            Body: body,
+            Bucket: bucket,
+            Key: path.join(prefix, filename),
+            ContentType: type
+          }, opt.headers || {});
+
+          this.provider.request('S3', 'putObject', details, this.options.stage, this.options.region);
         });
+
       });
-      resolve();
-    });
+
+    })
+
+    return (parallel) ? this.processParallel(steps) : this.processSequential(steps);
+
   }
 }
 
