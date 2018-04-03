@@ -31,6 +31,10 @@ Add to your serverless.yml:
 You can specify any number of `target`s that you want. Each `target` has a
 `bucket` and a `prefix`.
 
+`bucket` is either the name of your S3 bucket or a reference to a
+CloudFormation resources created in the same serverless configuration file.
+See below for additional details.
+
 You can specify `source` relative to the current directory.
 
 Each `source` has its own list of `globs`, which can be either a single glob,
@@ -101,6 +105,33 @@ details.
             - source: html/
               headers:
                 CacheControl: max-age=31104000 # 1 year
+```
+
+## Resolving References
+
+A common use case is to create the S3 buckets in the `resources` section of
+your serverless configuration and then reference it in your S3 plugin
+settings:
+
+```
+  custom:
+    assets:
+      targets:
+        - bucket:
+            Ref: MyBucket
+          files:
+            - source: html/
+
+  resources:
+    # AWS CloudFormation Template
+    Resources:
+      MyBucket:
+        Type: AWS::S3::Bucket
+        Properties:
+          AccessControl: PublicRead
+          WebsiteConfiguration:
+            IndexDocument: index.html
+            ErrorDocument: index.html
 ```
 
 ## Auto-deploy
