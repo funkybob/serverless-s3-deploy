@@ -4,6 +4,7 @@ const glob = require('glob-all');
 const fs = require('fs');
 const path = require('path');
 const mime = require('mime-types');
+const BbPromise = require('bluebird');
 
 const globOpts = {
   nodir: true
@@ -66,45 +67,85 @@ class Assets {
     }
   }
 
+  listStackResources(resources, nextToken) {
+    resources = resources || [];
+    return this.provider.request('CloudFormation', 'listStackResources', { StackName: this.provider.naming.getStackName(), NextToken: nextToken })
+    .then(response => {
+      resources.push.apply(resources, response.StackResourceSummaries);
+      if (response.NextToken) {
+        // Query next page
+        return this.listStackResources(resources, response.NextToken);
+      }
+    })
+    .return(resources);
+  }
+  
+  resolveBucket(resources, value) {
+    if (typeof value === 'string') {
+      return value;
+    }
+    else if (value && value.Ref) {
+      let resolved;
+      resources.forEach(resource => {
+        if (resource && resource.LogicalResourceId === value.Ref) {
+          resolved = resource.PhysicalResourceId;
+        }
+      });
+
+      if (!resolved) {
+        serverless.cli.log(`WARNING: Failed to resolve reference ${value.Ref}`);
+      }
+      return BbPromise.resolve(resolved);
+    }
+    else {
+      return BbPromise.reject(new Error(`Invalid bucket name ${value}`));
+    }
+  }
+
   deployS3() {
     let assetSets = this.config.targets;
 
-    // glob
-    return new Promise(resolve => {
-      assetSets.forEach(assets => {
-        const bucket = assets.bucket;
-        const prefix = assets.prefix || '';
-        assets.files.forEach(opt => {
-          this.log(`Bucket: ${bucket}:${prefix}`);
+    // Read existing stack resources so we can resolve references if necessary
+    return this.listStackResources()
+    .then(resources => {
+      // Process asset sets in parallel (up to 3)
+      return BbPromise.map(assetSets, assets => {
+        // Try to resolve the bucket name
+        return this.resolveBucket(resources, assets.bucket)
+        .then(bucket => {
+          const prefix = assets.prefix || '';
+          // Process files serially to not overload the network
+          return BbPromise.each(assets.files, opt => {
+            this.log(`Bucket: ${bucket}:${prefix}`);
 
-          if(this.options.bucket && this.options.bucket !== bucket) {
-            this.log('Skipping');
-            return;
-          }
+            if(this.options.bucket && this.options.bucket !== bucket) {
+              this.log('Skipping');
+              return;
+            }
 
-          this.log(`Path: ${opt.source}`);
+            this.log(`Path: ${opt.source}`);
 
-          const cfg = Object.assign({}, globOpts, {cwd: opt.source});
-          glob.sync(opt.globs, cfg).forEach(filename => {
+            const cfg = Object.assign({}, globOpts, {cwd: opt.source});
+            glob.sync(opt.globs, cfg).forEach(filename => {
 
-            const body = fs.readFileSync(path.join(opt.source, filename));
-            const type = mime.lookup(filename) || opt.defaultContentType || 'application/octet-stream';
+              const body = fs.readFileSync(path.join(opt.source, filename));
+              const type = mime.lookup(filename) || opt.defaultContentType || 'application/octet-stream';
 
-            this.log(`\tFile:  ${filename} (${type})`);
+              this.log(`\tFile:  ${filename} (${type})`);
 
-            const details = Object.assign({
-              ACL: assets.acl || 'public-read',
-              Body: body,
-              Bucket: bucket,
-              Key: path.join(prefix, filename),
-              ContentType: type
-            }, opt.headers || {});
+              const details = Object.assign({
+                ACL: assets.acl || 'public-read',
+                Body: body,
+                Bucket: bucket,
+                Key: path.join(prefix, filename),
+                ContentType: type
+              }, opt.headers || {});
 
-            this.provider.request('S3', 'putObject', details);
+              return this.provider.request('S3', 'putObject', details);
+            });
           });
         });
-      });
-      resolve();
+      }, { concurrency: 3 });
     });
   }
 }
