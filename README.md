@@ -43,7 +43,7 @@ or a list of globs.
 Now you can upload all of these assets to your bucket by running:
 
 ```
-$ sls s3delpoy
+$ sls s3deploy
 ```
 
 If you have defined multiple buckets, you can limit your deployment to
