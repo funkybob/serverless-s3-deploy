@@ -82,7 +82,7 @@ class Assets {
   
   resolveBucket(resources, value) {
     if (typeof value === 'string') {
-      return value;
+      return BbPromise.resolve(value);
     }
     else if (value && value.Ref) {
       let resolved;
