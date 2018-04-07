@@ -93,7 +93,7 @@ class Assets {
       });
 
       if (!resolved) {
-        serverless.cli.log(`WARNING: Failed to resolve reference ${value.Ref}`);
+        this.serverless.cli.log(`WARNING: Failed to resolve reference ${value.Ref}`);
       }
       return BbPromise.resolve(resolved);
     }
