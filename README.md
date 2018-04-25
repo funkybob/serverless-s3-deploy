@@ -18,6 +18,7 @@ Add to your serverless.yml:
           - source: ../assets/
             globs: '**/*.css'
           - source: ../app/
+            empty: true
             globs:
               - '**/*.js'
               - '**/*.map'
@@ -39,6 +40,9 @@ You can specify `source` relative to the current directory.
 
 Each `source` has its own list of `globs`, which can be either a single glob,
 or a list of globs.
+
+Setting `empty` to `true` will delete all files inside the bucket. The prefix
+value is respected and files outside will not be deleted.
 
 Now you can upload all of these assets to your bucket by running:
 
