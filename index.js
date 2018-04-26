@@ -141,7 +141,8 @@ class Assets {
       return BbPromise.map(assetSets, assets => {
           const prefix = assets.prefix || '';
           // Try to resolve the bucket name
-          return this.resolveBucket(resources, assets.bucket).then((bucket) => {
+          return this.resolveBucket(resources, assets.bucket)
+          .then((bucket) => {
             if(assets.empty) {
               this.log(`Emptying bucket`)
               return this.emptyBucket(bucket, prefix)
@@ -167,6 +168,8 @@ class Assets {
 
                 this.log(`\tFile:  ${filename} (${type})`);
 
+                // when using windows path join resolves to backslashes, but s3 is expecting a slash
+                // therefore replace all backslashes with slashes
                 const key = path
                   .join(prefix, filename)
                   .split('\\')
