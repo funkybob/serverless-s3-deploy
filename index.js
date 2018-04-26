@@ -172,8 +172,7 @@ class Assets {
                 // therefore replace all backslashes with slashes
                 const key = path
                   .join(prefix, filename)
-                  .split('\\')
-                  .join('/');
+                  .replace(/\\/g, '/');
 
                 const details = Object.assign(
                   {
