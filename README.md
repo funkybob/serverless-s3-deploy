@@ -23,7 +23,7 @@ Add to your serverless.yml:
               - '**/*.js'
               - '**/*.map'
        - bucket: my-other-bucket
-         prefix: /subdir'
+         prefix: subdir
          files:
           - source: ../email-templates/
             globs: '**/*.html'
