@@ -24,6 +24,7 @@ class Assets {
 
     this.config = Object.assign({}, {
       auto: false,
+      resolveReferences: true,
       targets: [],
     }, config);
 
@@ -70,6 +71,9 @@ class Assets {
 
   listStackResources(resources, nextToken) {
     resources = resources || [];
+    if (!this.config.resolveReferences) {
+      return BbPromise.resolve(resources);
+    }
     return this.provider.request('CloudFormation', 'listStackResources', { StackName: this.provider.naming.getStackName(), NextToken: nextToken })
     .then(response => {
       resources.push.apply(resources, response.StackResourceSummaries);
