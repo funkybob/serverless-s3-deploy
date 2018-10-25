@@ -2,6 +2,12 @@
 
 Plugin for serverless to deploy files to a variety of S3 Buckets
 
+# Installation
+
+```
+ npm install --save-dev serverless-s3-deploy
+```
+
 # Usage
 
 Add to your serverless.yml:
