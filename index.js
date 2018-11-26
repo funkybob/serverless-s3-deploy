@@ -162,7 +162,8 @@ class Assets {
               this.log(`Path: ${opt.source}`)
 
               const cfg = Object.assign({}, globOpts, { cwd: opt.source })
-              glob.sync(opt.globs, cfg).forEach((filename) => {
+              const filenames = glob.sync(opt.globs, cfg);
+              return BbPromise.each(filenames, (filename) => {
                 const body = fs.readFileSync(path.join(opt.source, filename))
                 const type = mime.lookup(filename) || opt.defaultContentType || 'application/octet-stream'
 
@@ -185,7 +186,7 @@ class Assets {
                   opt.headers || {}
                 );
 
-                return this.provider.request('S3', 'putObject', details)
+                return this.provider.request('S3', 'putObject', details);
               })
             })
           })
