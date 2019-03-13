@@ -143,22 +143,25 @@ class Assets {
           // Try to resolve the bucket name
           return this.resolveBucket(resources, assets.bucket)
           .then((bucket) => {
+            if (this.options.bucket && this.options.bucket !== bucket) {
+              this.log(`Skipping bucket: ${bucket}`)
+              return Promise.resolve('')
+            }
+
             if(assets.empty) {
-              this.log(`Emptying bucket`)
+              this.log(`Emptying bucket: ${bucket}`)
               return this.emptyBucket(bucket, prefix)
                 .then(() => bucket)
             }
             return Promise.resolve(bucket)
           }).then(bucket => {
+            if (!bucket) {
+              return
+            }
+
             // Process files serially to not overload the network
             return BbPromise.each(assets.files, (opt) => {
-              this.log(`Bucket: ${bucket}:${prefix}`)
-
-              if (this.options.bucket && this.options.bucket !== bucket) {
-                this.log('Skipping')
-                return
-              }
-
+              this.log(`Sync bucket: ${bucket}:${prefix}`)
               this.log(`Path: ${opt.source}`)
 
               const cfg = Object.assign({}, globOpts, { cwd: opt.source })
