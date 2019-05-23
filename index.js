@@ -64,7 +64,7 @@ class Assets {
 
   afterDeploy() {
     if(this.config.auto) {
-      this.deployS3();
+      return this.deployS3();
     }
   }
 
