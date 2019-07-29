@@ -194,3 +194,21 @@ a good starting point:
     ]
 }
 ```
+
+## Verbosity
+
+Verbosity cloud be enabled using either of these methods:
+
+Configuration:
+
+```
+  custom:
+    assets:
+      auto: true
+```
+
+Cli:
+
+```
+  sls s3deploy -v
+```

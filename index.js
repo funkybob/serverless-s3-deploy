@@ -24,6 +24,7 @@ class Assets {
 
     this.config = Object.assign({}, {
       auto: false,
+      verbose: false,
       resolveReferences: true,
       targets: [],
     }, config);
@@ -58,7 +59,7 @@ class Assets {
    * Also log on the default serverless SLS_DEBUG env
    */
   log(message) {
-    if(this.options.verbose || process.env.SLS_DEBUG) {
+    if(this.options.verbose || process.env.SLS_DEBUG || this.config.verbose) {
       this.serverless.cli.log(message);
     }
   }
