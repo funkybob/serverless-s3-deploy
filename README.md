@@ -144,6 +144,13 @@ settings:
             ErrorDocument: index.html
 ```
 
+You can disable the resolving with the following flag:
+```
+  custom:
+    assets:
+      resolveReferences: false
+```
+
 ## Auto-deploy
 
 If you want s3deploy to run automatically after a deploy, set the `auto` flag:
@@ -186,4 +193,22 @@ a good starting point:
         }
     ]
 }
+```
+
+## Verbosity
+
+Verbosity cloud be enabled using either of these methods:
+
+Configuration:
+
+```
+  custom:
+    assets:
+      auto: true
+```
+
+Cli:
+
+```
+  sls s3deploy -v
 ```

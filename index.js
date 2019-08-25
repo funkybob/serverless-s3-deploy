@@ -25,6 +25,8 @@ class Assets {
 
     this.config = Object.assign({}, {
       auto: false,
+      verbose: false,
+      resolveReferences: true,
       targets: [],
     }, config);
 
@@ -76,14 +78,14 @@ class Assets {
    * Also log on the default serverless SLS_DEBUG env
    */
   log(message) {
-    if(this.options.verbose || process.env.SLS_DEBUG) {
+    if(this.options.verbose || process.env.SLS_DEBUG || this.config.verbose) {
       this.serverless.cli.log(`${messagePrefix} ${message}`);
     }
   }
 
   afterDeploy() {
     if(this.config.auto) {
-      this.deployS3();
+      return this.deployS3();
     }
   }
 
@@ -95,6 +97,9 @@ class Assets {
 
   listStackResources(resources, nextToken) {
     resources = resources || [];
+    if (!this.config.resolveReferences) {
+      return BbPromise.resolve(resources);
+    }
     return this.provider.request('CloudFormation', 'listStackResources', { StackName: this.provider.naming.getStackName(), NextToken: nextToken })
     .then(response => {
       resources.push.apply(resources, response.StackResourceSummaries);
@@ -181,22 +186,25 @@ class Assets {
           // Try to resolve the bucket name
           return this.resolveBucket(resources, assets.bucket)
           .then((bucket) => {
+            if (this.options.bucket && this.options.bucket !== bucket) {
+              this.log(`Skipping bucket: ${bucket}`)
+              return Promise.resolve('')
+            }
+
             if(assets.empty) {
-              this.log(`Emptying bucket`)
+              this.log(`Emptying bucket: ${bucket}`)
               return this.emptyBucket(bucket, prefix)
                 .then(() => bucket)
             }
             return Promise.resolve(bucket)
           }).then(bucket => {
+            if (!bucket) {
+              return
+            }
+
             // Process files serially to not overload the network
             return BbPromise.each(assets.files, (opt) => {
-              this.log(`Bucket: ${bucket}:${prefix}`)
-
-              if (this.options.bucket && this.options.bucket !== bucket) {
-                this.log('Skipping')
-                return
-              }
-
+              this.log(`Sync bucket: ${bucket}:${prefix}`)
               this.log(`Path: ${opt.source}`)
 
               const cfg = Object.assign({}, globOpts, { cwd: opt.source })
