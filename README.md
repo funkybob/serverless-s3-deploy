@@ -77,7 +77,7 @@ basis:
           files:
 ```
 
-The default value is `public-read`. Options are defined
+The default value is `private`. Options are defined
 [here](http://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl).
 
 ## Content Type
