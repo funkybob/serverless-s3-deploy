@@ -185,7 +185,7 @@ class Assets {
 
                 const details = Object.assign(
                   {
-                    ACL: assets.acl || 'public-read',
+                    ACL: assets.acl || 'private',
                     Body: body,
                     Bucket: bucket,
                     Key: key,
