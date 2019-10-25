@@ -76,14 +76,14 @@ class Assets {
       return BbPromise.resolve(resources);
     }
     return this.provider.request('CloudFormation', 'listStackResources', { StackName: this.provider.naming.getStackName(), NextToken: nextToken })
-    .then(response => {
-      resources.push.apply(resources, response.StackResourceSummaries);
-      if (response.NextToken) {
+      .then(response => {
+        resources.push.apply(resources, response.StackResourceSummaries);
+        if (response.NextToken) {
         // Query next page
-        return this.listStackResources(resources, response.NextToken);
-      }
-    })
-    .return(resources);
+          return this.listStackResources(resources, response.NextToken);
+        }
+      })
+      .return(resources);
   }
 
   resolveBucket(resources, value) {
@@ -116,7 +116,7 @@ class Assets {
 
     return this.provider.request('S3', 'listObjectsV2', listParams)
       .then((listedObjects) => {
-        if (listedObjects.Contents.length === 0) return
+        if (listedObjects.Contents.length === 0) return;
 
         const deleteParams = {
           Bucket: bucket,
@@ -124,15 +124,15 @@ class Assets {
         };
 
         listedObjects.Contents.forEach(({ Key }) => {
-          deleteParams.Delete.Objects.push({ Key })
+          deleteParams.Delete.Objects.push({ Key });
         });
         return this.provider.request('S3', 'deleteObjects', deleteParams)
           .then(() => {
             if (listedObjects.Contents.IsTruncated) {
-              this.log(`Is not finished. Rerun emptyBucket`)
-              return this.emptyBucket(bucket, dir)
+              this.log('Is not finished. Rerun emptyBucket');
+              return this.emptyBucket(bucket, dir);
             }
-          })
+          });
       });
   }
 
@@ -141,67 +141,67 @@ class Assets {
 
     // Read existing stack resources so we can resolve references if necessary
     return this.listStackResources()
-    .then(resources => {
+      .then(resources => {
       // Process asset sets in parallel (up to 3)
-      return BbPromise.map(assetSets, assets => {
+        return BbPromise.map(assetSets, assets => {
           const prefix = assets.prefix || '';
           // Try to resolve the bucket name
           return this.resolveBucket(resources, assets.bucket)
-          .then((bucket) => {
-            if (this.options.bucket && this.options.bucket !== bucket) {
-              this.log(`Skipping bucket: ${bucket}`)
-              return Promise.resolve('')
-            }
+            .then((bucket) => {
+              if (this.options.bucket && this.options.bucket !== bucket) {
+                this.log(`Skipping bucket: ${bucket}`);
+                return Promise.resolve('');
+              }
 
-            if(assets.empty) {
-              this.log(`Emptying bucket: ${bucket}`)
-              return this.emptyBucket(bucket, prefix)
-                .then(() => bucket)
-            }
-            return Promise.resolve(bucket)
-          }).then(bucket => {
-            if (!bucket) {
-              return
-            }
+              if(assets.empty) {
+                this.log(`Emptying bucket: ${bucket}`);
+                return this.emptyBucket(bucket, prefix)
+                  .then(() => bucket);
+              }
+              return Promise.resolve(bucket);
+            }).then(bucket => {
+              if (!bucket) {
+                return;
+              }
 
-            // Process files serially to not overload the network
-            return BbPromise.each(assets.files, (opt) => {
-              this.log(`Sync bucket: ${bucket}:${prefix}`)
-              this.log(`Path: ${opt.source}`)
+              // Process files serially to not overload the network
+              return BbPromise.each(assets.files, (opt) => {
+                this.log(`Sync bucket: ${bucket}:${prefix}`);
+                this.log(`Path: ${opt.source}`);
 
-              const cfg = Object.assign({}, globOpts, { cwd: opt.source })
-              const filenames = glob.sync(opt.globs, cfg);
-              return BbPromise.each(filenames, (filename) => {
-                const body = fs.readFileSync(path.join(opt.source, filename))
-                const type = mime.lookup(filename) || opt.defaultContentType || 'application/octet-stream'
+                const cfg = Object.assign({}, globOpts, { cwd: opt.source });
+                const filenames = glob.sync(opt.globs, cfg);
+                return BbPromise.each(filenames, (filename) => {
+                  const body = fs.readFileSync(path.join(opt.source, filename));
+                  const type = mime.lookup(filename) || opt.defaultContentType || 'application/octet-stream';
 
-                this.log(`\tFile:  ${filename} (${type})`);
+                  this.log(`\tFile:  ${filename} (${type})`);
 
-                // when using windows path join resolves to backslashes, but s3 is expecting a slash
-                // therefore replace all backslashes with slashes
-                const key = path
-                  .join(prefix, filename)
-                  .replace(/\\/g, '/');
+                  // when using windows path join resolves to backslashes, but s3 is expecting a slash
+                  // therefore replace all backslashes with slashes
+                  const key = path
+                    .join(prefix, filename)
+                    .replace(/\\/g, '/');
 
-                const details = Object.assign(
-                  {
-                    ACL: assets.acl || 'private',
-                    Body: body,
-                    Bucket: bucket,
-                    Key: key,
-                    ContentType: type
-                  },
-                  opt.headers || {}
-                );
+                  const details = Object.assign(
+                    {
+                      ACL: assets.acl || 'private',
+                      Body: body,
+                      Bucket: bucket,
+                      Key: key,
+                      ContentType: type
+                    },
+                    opt.headers || {}
+                  );
 
-                return this.provider.request('S3', 'putObject', details);
-              })
-            })
-          })
+                  return this.provider.request('S3', 'putObject', details);
+                });
+              });
+            });
         },
         { concurrency: 3 }
-      )
-    })
+        );
+      });
   }
 }
 

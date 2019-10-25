@@ -17,14 +17,16 @@
     "url": "git+https://github.com/funkybob/serverless-s3-deploy.git"
   },
   "dependencies": {
-    "bluebird": "^3.5.1",
+    "bluebird": "^3.7.1",
     "glob-all": "^3.1.0",
-    "mime-types": "^2.1.18"
+    "mime-types": "^2.1.24"
   },
   "devDependencies": {
-    "eslint": "^3.19.0",
-    "eslint-config-standard": "^7.1.0",
-    "eslint-plugin-promise": "^3.8.0",
-    "eslint-plugin-standard": "^2.3.1"
+    "eslint": "^6.6.0",
+    "eslint-config-standard": "^14.1.0",
+    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-node": "^10.0.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.1"
   }
 }
