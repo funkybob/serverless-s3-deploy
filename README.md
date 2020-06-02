@@ -205,7 +205,7 @@ Configuration:
 ```
   custom:
     assets:
-      auto: true
+      verbose: true
 ```
 
 Cli:
