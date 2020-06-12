@@ -12,22 +12,10 @@ const globOpts = {
 
 
 class Assets {
-  constructor (serverless, options) {
+  constructor(serverless, options) {
     this.serverless = serverless;
     this.options = options;
     this.provider = this.serverless.getProvider('aws');
-
-    let config = this.serverless.service.custom.assets;
-    if(Array.isArray(config)) {
-      config = {targets: config};
-    }
-
-    this.config = Object.assign({}, {
-      auto: false,
-      verbose: false,
-      resolveReferences: true,
-      targets: [],
-    }, config);
 
     this.commands = {
       s3deploy: {
@@ -49,8 +37,8 @@ class Assets {
     };
 
     this.hooks = {
-      's3deploy:deploy': () => Promise.resolve().then(this.deployS3.bind(this)),
-      'after:deploy:finalize': () => Promise.resolve().then(this.afterDeploy.bind(this))
+      's3deploy:deploy': () => Promise.resolve().then(this.resolve.bind(this)).then(this.deployS3.bind(this)),
+      'after:deploy:finalize': () => Promise.resolve().then(this.resolve.bind(this)).then(this.afterDeploy.bind(this))
     };
   }
 
@@ -59,13 +47,31 @@ class Assets {
    * Also log on the default serverless SLS_DEBUG env
    */
   log(message) {
-    if(this.options.verbose || process.env.SLS_DEBUG || this.config.verbose) {
+    if (this.options.verbose || process.env.SLS_DEBUG || this.config.verbose) {
       this.serverless.cli.log(message);
     }
   }
 
+  /**
+   * Variable references in the serverless instance are not resolved before a Plugin's
+   * constructor is called. We need to access it from our hooks instead.
+   */
+  resolveConfig() {
+    let config = this.serverless.service.custom.assets;
+    if (Array.isArray(config)) {
+      config = { targets: config };
+    }
+
+    this.config = Object.assign({}, {
+      auto: false,
+      verbose: false,
+      resolveReferences: true,
+      targets: [],
+    }, config);
+  }
+
   afterDeploy() {
-    if(this.config.auto) {
+    if (this.config.auto) {
       return this.deployS3();
     }
   }
@@ -79,7 +85,7 @@ class Assets {
       .then(response => {
         resources.push.apply(resources, response.StackResourceSummaries);
         if (response.NextToken) {
-        // Query next page
+          // Query next page
           return this.listStackResources(resources, response.NextToken);
         }
       })
@@ -142,7 +148,7 @@ class Assets {
     // Read existing stack resources so we can resolve references if necessary
     return this.listStackResources()
       .then(resources => {
-      // Process asset sets in parallel (up to 3)
+        // Process asset sets in parallel (up to 3)
         return BbPromise.map(assetSets, assets => {
           const prefix = assets.prefix || '';
           // Try to resolve the bucket name
@@ -153,7 +159,7 @@ class Assets {
                 return Promise.resolve('');
               }
 
-              if(assets.empty) {
+              if (assets.empty) {
                 this.log(`Emptying bucket: ${bucket}`);
                 return this.emptyBucket(bucket, prefix)
                   .then(() => bucket);
@@ -199,7 +205,7 @@ class Assets {
               });
             });
         },
-        { concurrency: 3 }
+          { concurrency: 3 }
         );
       });
   }
