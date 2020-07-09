@@ -27,6 +27,7 @@ class Assets {
       verbose: false,
       resolveReferences: true,
       targets: [],
+      uploadConcurrency: 3,
     }, config);
 
     this.commands = {
@@ -138,6 +139,7 @@ class Assets {
 
   deployS3() {
     let assetSets = this.config.targets;
+    let uploadConcurrency = this.config.uploadConcurrency;
 
     // Read existing stack resources so we can resolve references if necessary
     return this.listStackResources()
@@ -199,7 +201,7 @@ class Assets {
               });
             });
         },
-        { concurrency: 3 }
+        { concurrency: uploadConcurrency }
         );
       });
   }
