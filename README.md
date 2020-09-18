@@ -196,6 +196,17 @@ a good starting point:
 }
 ```
 
+## Upload concurrency
+
+If you want to tweak the upload concurrency, change `uploadConcurrency` config:
+
+```
+config:
+  assets:
+    # defaults to 3
+    uploadConcurrency: 1
+```
+
 ## Verbosity
 
 Verbosity cloud be enabled using either of these methods:
