@@ -84,7 +84,9 @@ class Assets {
           return this.listStackResources(resources, response.NextToken);
         }
       })
-      .return(resources);
+      .then(() => {
+        return resources;
+      });
   }
 
   resolveBucket(resources, value) {
