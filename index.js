@@ -39,11 +39,13 @@ class Assets {
         options: {
           verbose: {
             usage: 'Increase verbosity',
-            shortcut: 'v'
+            shortcut: 'v',
+            type: 'boolean'
           },
           bucket: {
             usage: 'Limit the deploy to a specific bucket',
-            shortcut: 'b'
+            shortcut: 'b',
+            type: 'string'
           }
         }
       }
