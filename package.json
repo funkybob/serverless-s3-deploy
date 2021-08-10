@@ -19,12 +19,12 @@
   "dependencies": {
     "bluebird": "^3.7.2",
     "glob-all": "^3.2.1",
-    "mime-types": "^2.1.31"
+    "mime-types": "^2.1.32"
   },
   "devDependencies": {
-    "eslint": "^7.30.0",
+    "eslint": "^7.32.0",
     "eslint-config-standard": "^16.0.3",
-    "eslint-plugin-import": "^2.23.4",
+    "eslint-plugin-import": "^2.24.0",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^4.3.1",
     "eslint-plugin-standard": "^5.0.0"
