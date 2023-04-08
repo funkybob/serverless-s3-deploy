@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const mime = require('mime-types');
 const BbPromise = require('bluebird');
+const messagePrefix = 'S3 Deploy: ';
 
 const globOpts = {
   nodir: true
@@ -48,12 +49,30 @@ class Assets {
             type: 'string'
           }
         }
+      },
+      s3remove: {
+        usage: 'Remove assets from S3 buckets',
+        lifecycleEvents: [
+          'remove'
+        ],
+        options: {
+          verbose: {
+            usage: 'Increase verbosity',
+            shortcut: 'v'
+          },
+          bucket: {
+            usage: 'Limit the removal to a specific bucket',
+            shortcut: 'b'
+          }
+        }
       }
     };
 
     this.hooks = {
       's3deploy:deploy': () => Promise.resolve().then(this.deployS3.bind(this)),
-      'after:deploy:finalize': () => Promise.resolve().then(this.afterDeploy.bind(this))
+      'after:deploy:finalize': () => Promise.resolve().then(this.afterDeploy.bind(this)),
+      's3remove:remove': () => Promise.resolve().then(this.removeS3.bind(this)),
+      'before:remove:remove': () => Promise.resolve().then(this.beforeRemove.bind(this))
     };
   }
 
@@ -63,13 +82,19 @@ class Assets {
    */
   log(message) {
     if(this.options.verbose || process.env.SLS_DEBUG || this.config.verbose) {
-      this.serverless.cli.log(message);
+      this.serverless.cli.log(`${messagePrefix} ${message}`);
     }
   }
 
   afterDeploy() {
     if(this.config.auto) {
       return this.deployS3();
+    }
+  }
+
+  beforeRemove() {
+    if(this.config.auto) {
+      this.removeS3();
     }
   }
 
@@ -141,6 +166,19 @@ class Assets {
       });
   }
 
+  removeBucket(bucket) {
+    console.log(`Removing bucket`, bucket);
+    const deleteParams = {
+      Bucket: bucket,
+    };
+
+    return this.provider.request('S3', 'deleteBucket', deleteParams)
+      .then(() => {
+        this.log(`Did it fail?`)
+        return
+      });
+  }
+
   deployS3() {
     let assetSets = this.config.targets;
     let uploadConcurrency = this.config.uploadConcurrency;
@@ -208,6 +246,31 @@ class Assets {
         { concurrency: uploadConcurrency }
         );
       });
+  }
+
+  removeS3() {
+    let assetSets = this.config.targets;
+
+    // Read existing stack resources so we can resolve references if necessary
+    return this.listStackResources()
+    .then(resources => {
+      // Process asset sets in parallel (up to 3)
+      return BbPromise.map(assetSets, assets => {
+          const prefix = assets.prefix || '';
+          // Try to resolve the bucket name
+          return this.resolveBucket(resources, assets.bucket)
+          .then((bucket) => {
+            this.log(`Emptying bucket`)
+            return this.emptyBucket(bucket, prefix)
+              .then(() => {
+                this.log(`Removing Bucket: ${bucket}:${prefix}`)
+                return this.removeBucket(bucket);
+              });
+          })
+        },
+        { concurrency: 3 }
+      )
+    })
   }
 }
 
